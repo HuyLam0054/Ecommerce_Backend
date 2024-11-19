@@ -1,15 +1,17 @@
-import { config } from "dotenv";
-config({ path: `.env.${process.env.NODE_ENV || "development"}.local` });
+import mongoose from "mongoose";
 
-export const CREDENTIALS = process.env.CREDENTIALS === "true";
-export const {
-  NODE_ENV,
-  PORT,
-  DB_HOST,
-  DB_PORT,
-  DB_DATABASE,
-  SECRET_KEY,
-  LOG_FORMAT,
-  LOG_DIR,
-  ORIGIN,
-} = process.env;
+mongoose.set("strictQuery", false);
+
+const dbConnect = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.db_url ?? "");
+    if (conn.connection.readyState === 1)
+      console.log("DB connection is successfully!");
+    else console.log("DB connecting");
+  } catch (error) {
+    console.log("DB connection is failed");
+    throw new Error("Error");
+  }
+};
+
+export default dbConnect;
