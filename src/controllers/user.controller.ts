@@ -1,13 +1,14 @@
 import User from "../models/user.model";
-import asyncHandler from "express-async-handler";
-import { generateAccessToken, generateRefreshToken } from "../middlewares/jwt";
+import { Request, Response } from "express";
+// import { generateAccessToken, generateRefreshToken } from "../middlewares/jwt";
 import jwt from "jsonwebtoken";
 // import sendMail from "../ultils/sendMail";
-import { IUser } from "../types/user";
+// import { IUser } from "../types/user";
 import crypto from "crypto";
 
-const register = asyncHandler(async (req: Request, res: Response) => {
-  const { email, password, firstname, lastname }: IUser = req.body;
+
+const register = async (req: Request, res: Response) => {
+  const { email, password, firstname, lastname } = req.body;
   if (!email || !password || !lastname || !firstname)
     return res.status(400).json({
       sucess: false,
@@ -25,11 +26,11 @@ const register = asyncHandler(async (req: Request, res: Response) => {
         : "Something went wrong",
     });
   }
-});
+};
 // Refresh token => Cấp mới access token
 // Access token => Xác thực người dùng, phân quyên người dùng
-const login = asyncHandler(async (req: Request, res: Response) => {
-  const { email<string>, password<string> } = req.body;
+const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
   if (!email || !password)
     return res.status(400).json({
       sucess: false,
@@ -63,16 +64,16 @@ const login = asyncHandler(async (req: Request, res: Response) => {
   } else {
     throw new Error("Invalid credentials!");
   }
-});
-const getCurrent = asyncHandler(async (req: Request, res: Response) => {
+};
+const getCurrent = async (req: Request, res: Response) => {
   const { _id } = req.user;
   const user = await User.findById(_id).select("-refreshToken -password -role");
   return res.status(200).json({
     success: user ? true : false,
     rs: user ? user : "User not found",
   });
-});
-const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
+};
+const refreshAccessToken = async (req: Request, res: Response) => {
   // Lấy token từ cookies
   const cookie = req.cookies;
   // Check xem có token hay không
@@ -90,9 +91,9 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
       ? generateAccessToken(response._id, response.role)
       : "Refresh token not matched",
   });
-});
+};
 
-const logout = asyncHandler(async (req: Request, res: Response) => {
+const logout = async (req: Request, res: Response) => {
   const cookie = req.cookies;
   if (!cookie || !cookie.refreshToken)
     throw new Error("No refresh token in cookies");
@@ -111,7 +112,7 @@ const logout = asyncHandler(async (req: Request, res: Response) => {
     success: true,
     mes: "Logout is done",
   });
-});
+};
 // Client gửi email
 // Server check email có hợp lệ hay không => Gửi mail + kèm theo link (password change token)
 // Client check mail => click link
@@ -119,7 +120,7 @@ const logout = asyncHandler(async (req: Request, res: Response) => {
 // Check token có giống với token mà server gửi mail hay không
 // Change password
 
-const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+const forgotPassword = async (req: Request, res: Response) => {
   const { email } = req.query;
   if (!email) throw new Error("Missing email");
   const user = await User.findOne({ email });
@@ -138,8 +139,8 @@ const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
     success: true,
     rs,
   });
-});
-const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+};
+const resetPassword = async (req: Request, res: Response) => {
   const { password, token } = req.body;
   if (!password || !token) throw new Error("Missing imputs");
   const passwordResetToken = crypto
@@ -160,15 +161,15 @@ const resetPassword = asyncHandler(async (req: Request, res: Response) => {
     success: user ? true : false,
     mes: user ? "Updated password" : "Something went wrong",
   });
-});
-const getUsers = asyncHandler(async (req: Request, res: Response) => {
+};
+const getUsers = async (req: Request, res: Response) => {
   const response = await User.find().select("-refreshToken -password -role");
   return res.status(200).json({
     success: response ? true : false,
     users: response,
   });
-});
-const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+};
+const deleteUser = async (req: Request, res: Response) => {
   const { _id } = req.query;
   if (!_id) throw new Error("Missing inputs");
   const response = await User.findByIdAndDelete(_id);
@@ -178,8 +179,8 @@ const deleteUser = asyncHandler(async (req: Request, res: Response) => {
       ? `User with email ${response.email} deleted`
       : "No user delete",
   });
-});
-const updateUser = asyncHandler(async (req: Request, res: Response) => {
+};
+const updateUser = async (req: Request, res: Response) => {
   //
   const { _id } = req.user;
   if (!_id || Object.keys(req.body).length === 0)
@@ -191,9 +192,8 @@ const updateUser = asyncHandler(async (req: Request, res: Response) => {
     success: response ? true : false,
     updatedUser: response ? response : "Some thing went wrong",
   });
-});
-const updateUserByAdmin = asyncHandler(async (req: Request, res: Response) => {
-  //
+};
+const updateUserByAdmin = async (req: Request, res: Response) => {
   const { uid } = req.params;
   if (Object.keys(req.body).length === 0) throw new Error("Missing inputs");
   const response = await User.findByIdAndUpdate(uid, req.body, {
@@ -203,7 +203,7 @@ const updateUserByAdmin = asyncHandler(async (req: Request, res: Response) => {
     success: response ? true : false,
     updatedUser: response ? response : "Some thing went wrong",
   });
-});
+};
 export default {
   register,
   login,

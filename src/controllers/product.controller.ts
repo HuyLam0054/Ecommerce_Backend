@@ -6,7 +6,7 @@ const createProduct = asyncHandler(async (req: Request, res: Response) => {
   if (Object.keys(req.body).length === 0) throw new Error("Missing inputs");
   if (req.body && req.body.title) req.body.slug = slugify(req.body.title);
   const newProduct = await Product.create(req.body);
-  return res.status(200).json({
+  return res.status<Number>(200).json({
     success: newProduct ? true : false,
     createdProduct: newProduct ? newProduct : "Cannot create new product",
   });
